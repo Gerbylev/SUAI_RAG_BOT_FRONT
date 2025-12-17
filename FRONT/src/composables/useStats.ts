@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import type { Message, UsageStats } from '@/types'
 
 export function useStats(messages: { value: Message[] }) {

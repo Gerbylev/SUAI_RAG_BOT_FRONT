@@ -1,0 +1,66 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+        run: |
+          # Create SSH key file
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Add server to known_hosts
+          ssh-keyscan -p $DEPLOY_PORT -H $DEPLOY_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          # SSH into server and update frontend
+          ssh -i ~/.ssh/deploy_key \
+              -p $DEPLOY_PORT \
+              $DEPLOY_USER@$DEPLOY_HOST \
+              "cd /opt/suai-rag-bot-server && \
+               git -C SUAI_RAG_BOT_FRONT pull origin main && \
+               docker-compose -f RAG_BOT/rag-cm/cmp-resources/app/suai-rag-front/docker-compose.yml \
+                 --project-name suai-rag-front \
+                 --env-file .env \
+                 up -d && \
+               docker-compose -f RAG_BOT/rag-cm/cmp-resources/app/suai-rag-front/docker-compose.yml \
+                 --project-name suai-rag-front \
+                 logs --tail=50"
+
+      - name: Verify deployment
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Health check - verify frontend is accessible
+          ssh -i ~/.ssh/deploy_key \
+              -p $DEPLOY_PORT \
+              $DEPLOY_USER@$DEPLOY_HOST \
+              "curl -f http://localhost:80 -I || exit 1"
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
