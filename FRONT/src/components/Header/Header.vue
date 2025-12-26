@@ -13,9 +13,19 @@
       </div>
       
       <div class="header-right">
+        <!-- Кнопка новый чат -->
+        <button
+          class="new-chat-btn"
+          @click="$emit('newChat')"
+          title="Начать новый чат"
+        >
+          <span class="new-chat-icon">+</span>
+          <span class="new-chat-label">Новый чат</span>
+        </button>
+
         <!-- Переключатель темы -->
         <div class="theme-switcher">
-          <button 
+          <button
             class="theme-btn"
             @click="$emit('toggleTheme')"
             :title="isDarkTheme ? 'Включить светлую тему' : 'Включить темную тему'"
@@ -24,7 +34,7 @@
             <span class="theme-label">{{ isDarkTheme ? 'Светлая' : 'Темная' }}</span>
           </button>
         </div>
-        
+
         <div class="user-info">
           <div class="status">
             <span class="status-dot online"></span>
@@ -43,6 +53,7 @@ defineProps<{
 
 defineEmits<{
   toggleTheme: []
+  newChat: []
 }>()
 </script>
 
@@ -214,14 +225,53 @@ defineEmits<{
 }
 
 @keyframes pulse {
-  0%, 100% { 
-    opacity: 1; 
+  0%, 100% {
+    opacity: 1;
     transform: scale(1);
   }
-  50% { 
-    opacity: 0.7; 
+  50% {
+    opacity: 0.7;
     transform: scale(1.1);
   }
+}
+
+/* Кнопка новый чат */
+.new-chat-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 14px;
+  color: var(--header-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.new-chat-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.new-chat-btn:active {
+  transform: translateY(0);
+}
+
+.new-chat-icon {
+  font-size: 16px;
+  font-weight: 700;
+  transition: transform var(--transition-speed) ease;
+}
+
+.new-chat-btn:hover .new-chat-icon {
+  transform: rotate(90deg);
 }
 
 /* Адаптивность для Header */

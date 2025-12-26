@@ -13,7 +13,48 @@
             <div v-if="message.type === 'bot'" class="avatar">
               <div class="avatar-icon">SRB</div>
             </div>
-            <div class="text">{{ message.text }}</div>
+            <div class="text-wrapper">
+              <div class="text">{{ message.text }}</div>
+              <!-- Изображения под сообщением бота -->
+              <div v-if="message.type === 'bot' && message.images && Object.keys(message.images).length > 0" class="images-container">
+                <div class="images-gallery">
+                  <div
+                    v-for="(imageData, imageName) in message.images"
+                    :key="imageName"
+                    class="image-item"
+                  >
+                    <img
+                      v-if="imageData.data"
+                      :src="`data:image/png;base64,${imageData.data}`"
+                      :alt="`Map: ${imageData.destination}`"
+                      class="image-content"
+                    />
+                    <div class="image-meta" v-if="imageData.destination">
+                      <div class="image-title">🗺️ {{ imageData.building }}</div>
+                      <div class="image-details">
+                        📍 {{ imageData.starting_point }} → {{ imageData.destination }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Источники под сообщением бота -->
+              <div v-if="message.type === 'bot' && message.sources && Object.keys(message.sources).length > 0" class="sources-container">
+                <div class="sources-label">📚 Источники:</div>
+                <div class="sources-list">
+                  <a
+                    v-for="(url, num) in sortedSources(message.sources)"
+                    :key="num"
+                    :href="url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="source-link"
+                  >
+                    [{{ num }}]
+                  </a>
+                </div>
+              </div>
+            </div>
             <div v-if="message.type === 'user'" class="avatar">
               <div class="avatar-icon">Вы</div>
             </div>
@@ -50,6 +91,17 @@ const props = defineProps<{
 }>()
 
 const messagesContainer = ref<HTMLElement>()
+
+// Сортирует источники по номеру
+const sortedSources = (sources: Record<string, string>): Record<string, string> => {
+  const sorted: Record<string, string> = {}
+  Object.keys(sources)
+    .sort((a, b) => parseInt(a) - parseInt(b))
+    .forEach(key => {
+      sorted[key] = sources[key]
+    })
+  return sorted
+}
 
 // Авто-прокрутка вниз
 const scrollToBottom = () => {
@@ -289,6 +341,128 @@ watch(() => props.isLoading, () => {
 
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* Стили для источников */
+.text-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sources-container {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(79, 70, 229, 0.08);
+  border-left: 3px solid #4f46e5;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.sources-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.sources-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  background: #4f46e5;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all var(--transition-fast) ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.source-link:hover {
+  background: #4338ca;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.source-link:active {
+  transform: translateY(0);
+}
+
+/* Стили для изображений */
+.images-container {
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.images-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.image-item {
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  animation: imageLoad 0.3s ease-out;
+}
+
+@keyframes imageLoad {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.image-content {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-width: 500px;
+  border-radius: 6px 6px 0 0;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.image-content:hover {
+  transform: scale(1.02);
+}
+
+.image-meta {
+  padding: 10px 12px;
+  background: rgba(79, 70, 229, 0.05);
+  border-top: 1px solid var(--border-color);
+  font-size: 12px;
+}
+
+.image-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.image-details {
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
 
 /* Адаптивность для Chat */
 @media (max-width: 1024px) {

@@ -1,8 +1,9 @@
 <template>
   <div class="university-assistant" :class="{ 'dark-theme': isDarkTheme }">
-    <Header 
+    <Header
       :is-dark-theme="isDarkTheme"
       @toggle-theme="toggleTheme"
+      @new-chat="handleNewChat"
     />
     
     <main class="assistant-main">
@@ -53,7 +54,14 @@ import type { QuickAction } from './types'
 
 // Инициализация композейблов
 const { isDarkTheme, toggleTheme } = useTheme()
-const { messages, userInput, isLoading, sendMessage: sendChatMessage } = useChat()
+const {
+  messages,
+  userInput,
+  isLoading,
+  error,
+  sendMessage: sendChatMessage,
+  createNewSession
+} = useChat()
 const { quickActions } = useQuickActions()
 const { usageStats, refreshStats } = useStats(messages)
 
@@ -76,10 +84,16 @@ const sendMessage = async () => {
   refreshStats()
 }
 
+const handleNewChat = async () => {
+  await createNewSession()
+  closeWelcome()
+  refreshStats()
+}
+
 // Инициализация
 onMounted(() => {
   refreshStats()
-  
+
   console.log('🎓 Suai Rag Bot запущен')
 })
 
